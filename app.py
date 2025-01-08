@@ -105,8 +105,9 @@ def verify_otp():
 @app.route('/api/sendPin', methods=['POST'])
 def send_pin():
     data = request.get_json()
+    logging.debug(f"Received data: {data}")  # Log the incoming data
     email = data.get('email')
-    pin = data.get('pin')  # Fetch the PIN from the request
+    pin = data.get('pin')
 
     if not email or not pin:
         return jsonify(success=False, message='Email and PIN are required'), 400
@@ -116,7 +117,7 @@ def send_pin():
     logging.info(f"Received PIN {pin} for {email}")
 
     # Send the PIN to NodeMCU ESP32
-    esp32_url = "http://192.168.1.100/receivePin"  # Replace with your ESP32's IP address
+    esp32_url = "http://<192.168.1.100>/receivePin"  # Replace with your ESP32's IP address
     try:
         response = requests.post(esp32_url, json={'email': email, 'pin': pin})
         if response.status_code == 200:
