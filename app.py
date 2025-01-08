@@ -4,21 +4,21 @@ from flask_cors import CORS
 import random
 import sqlite3
 import logging
-import os
-
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+import os  # Make sure to import os
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Initialize the Flask application
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Configure Flask-Mail
+# Configure Flask-Mail using environment variables
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_DEFAULT_SENDER'] = 'jayfakeid23@gmail.com'  # Replace with your email
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')  # Use environment variable
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')  # Use environment variable
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')  # Use environment variable
 
 mail = Mail(app)
 
