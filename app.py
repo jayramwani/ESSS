@@ -54,6 +54,21 @@ def login():
         return jsonify(success=True, message='OTP sent to your email')
     else:
         return jsonify(success=False, message='Invalid email or password'), 401
+    
+@app.route('/api/requestOtp', methods=['POST'])
+def request_otp():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify(success=False, message='Email is required'), 400
+
+    # Generate a 6-digit OTP
+    otp = random.randint(100000, 999999)
+    otp_storage[email] = otp  # Store OTP in memory
+    send_otp(email, otp)  # Send OTP to the user's email
+
+    return jsonify(success=True, message='OTP sent to your email')
 
 def send_otp(email, otp):
     logging.debug(f"Sending OTP {otp} to {email}")
