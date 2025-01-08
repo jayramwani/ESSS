@@ -124,7 +124,7 @@ def send_pin():
     return jsonify(success=True, message='PIN generated successfully', pin=pin)
 
 def send_pin_to_esp32(pin):
-    esp32_url = f'http://<ESP32_IP_ADDRESS>/receivePin?pin={pin}'  # Replace with your ESP32's IP address
+    esp32_url = f'http://192.168.1.100/receivePin?pin={pin}'  # Use the static IP address
     try:
         response = requests.get(esp32_url)
         if response.status_code == 200:
