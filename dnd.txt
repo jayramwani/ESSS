@@ -1,0 +1,8 @@
+The home page should consist of 1 button which request the access of fingerprint scanner and scans the finger and verify it, if the fingerprint is correct then it will again send the otp to register email and that needs to be verified so after it is verified it will generate a pin and that pin will go to the backend server
+echo "# ESSS" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/jayramwani/ESSS.git
+git push -u origin main
