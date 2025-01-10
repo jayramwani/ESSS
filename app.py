@@ -4,7 +4,8 @@ from flask_cors import CORS
 import random
 import logging
 import os
-import requests  # Import requests to send HTTP requests
+
+from database import create_connection, insert_user, get_user  # Import database functions
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,13 +24,26 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')  # Use envir
 
 mail = Mail(app)
 
-# In-memory storage for OTP and PIN
+# In-memory storage for OTP
 otp_storage = {}
-pin_storage = {}
 
 @app.route('/')  # Route for the root URL
 def home():
-    return "Welcome to the Login API! Use /api/login to log in, /api/requestOtp to request an OTP, and /api/sendPin to generate a PIN."
+    return "Welcome to the Login API! Use /api/login to log in, /api/requestOtp to request an OTP, and /api/register to register a new user."
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify(success=False, message='Email and password are required'), 400
+
+    if insert_user(email, password):
+        return jsonify(success=True, message='User registered successfully'), 201
+    else:
+        return jsonify(success=False, message='User already exists'), 409  # Conflict
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -37,9 +51,9 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    # Validate the email and password against the database
-    # (Assuming you have a database connection and user validation logic)
-    if email == "test@example.com" and password == "password":  # Example validation
+    user = get_user(email, password)
+
+    if user:
         otp = random.randint(100000, 999999)  # Generate a 6-digit OTP
         otp_storage[email] = otp  # Store OTP in memory
         send_otp(email, otp)  # Send OTP to the user's email
@@ -64,7 +78,7 @@ def request_otp():
 def send_otp(email, otp):
     logging.debug(f"Sending OTP {otp} to {email}")
     msg = Message('Your OTP Code', recipients=[email])
-    msg.body = f'Your OTP code is {otp}'
+    msg.body = f'Your OTP code is { otp}'
     try:
         mail.send(msg)
         logging.info(f"OTP sent successfully to {email}")
@@ -78,51 +92,17 @@ def verify_otp():
     email = data.get('email')
     otp = data.get('otp')
 
-    logging.debug(f"Received OTP for {email}: {otp}")
-    logging.debug(f"Stored OTP for {email}: {otp_storage.get(email)}")
+    if not email or not otp:
+        return jsonify(success=False, message='Email and OTP are required'), 400
 
-    # Verify the OTP
-    if email in otp_storage and otp_storage[email] == int(otp):
+    if email in otp_storage and otp_storage[email] == otp:
         del otp_storage[email]  # Remove OTP after verification
-        logging.info(f"OTP verified successfully for {email}")
-        return jsonify(success=True, message='OTP verified successfully', verified=True)
+        return jsonify(success=True, message='OTP verified successfully')
     else:
-        logging.warning(f"Invalid OTP attempt for {email}: {otp}")
-        return jsonify(success=False, message='Invalid OTP', verified=False), 400
-
-@app.route('/api/sendPin', methods=['POST'])
-def send_pin():
-    data = request.get_json()
-    logging.debug(f"Received data: {data}")  # Log the incoming data
-    email = data.get('email')
-    pin = data.get('pin')
-
-    if not email or not pin:
-        return jsonify(success=False, message='Email and PIN are required'), 400
-
-    # Store the PIN in memory
-    pin_storage[email] = pin  # Store PIN in memory
-    logging.info(f"Received PIN {pin} for {email}")
-
-    return jsonify(success=True, message='PIN received successfully')
-
-@app.route('/api/getPin', methods=['GET'])
-def get_pin():
-    email = request.args.get('email')  # Get email from query parameters
-    if email in pin_storage:
-        pin = pin_storage[email]
-        return jsonify({"pin": pin})
-    else:
-        return jsonify({"error": "No PIN found for this email"}), 404
-
-def expire_pin(email):
-    if email in pin_storage:
-        del pin_storage[email]  # Remove PIN after expiration
-        logging.info(f"PIN for {email} has expired and has been removed.")
+        return jsonify(success=False, message='Invalid OTP'), 401
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 # from flask import Flask, request, jsonify
 # from flask_mail import Mail, Message
