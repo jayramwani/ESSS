@@ -38,8 +38,13 @@ def login():
     password = data.get('password')
 
     # Validate the email and password against the database
-    # (Assuming you have a database connection and user validation logic)
-    if email == "test@example.com" and password == "password":  # Example validation
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
         otp = random.randint(100000, 999999)  # Generate a 6-digit OTP
         otp_storage[email] = otp  # Store OTP in memory
         send_otp(email, otp)  # Send OTP to the user's email
