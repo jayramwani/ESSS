@@ -4,7 +4,9 @@ from flask_cors import CORS
 import random
 import logging
 import os
-import requests  # Import requests to send HTTP requests
+import requests
+
+from database import create_connection  # Import requests to send HTTP requests
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
